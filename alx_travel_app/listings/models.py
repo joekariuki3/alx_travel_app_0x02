@@ -4,6 +4,7 @@ from uuid import uuid4
 
 class User(AbstractUser):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    phone_number = models.CharField(max_length=20, blank=True)
 
     def __str__(self):
         return self.username
@@ -45,6 +46,7 @@ class Booking(models.Model):
     end_date = models.DateField()
     total_price = models.IntegerField()
     status = models.CharField(max_length=50, choices=BookingStatus.choices, default=BookingStatus.PENDING)
+    payment_url = models.URLField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -68,3 +70,22 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.listing} - {self.guest} - {self.rating}"
+
+class PaymentStatus(models.TextChoices):
+    PENDING = 'pending'
+    SUCCESS = 'success'
+    FAILED = 'failed'
+
+class Payment(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    payment_status = models.CharField(max_length=200, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
+    amount = models.IntegerField()
+    transaction_id = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Foreign key
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.booking} - {self.payment_status} - {self.amount}"
